@@ -2,6 +2,8 @@ import AppKit
 import SwiftUI
 import UsageCore
 
+/// The usage panel hosted in the menu's custom-view item. Interactive controls live as real
+/// NSMenuItems below it, so this view is display-only.
 struct DropdownView: View {
     let store: UsageStore
     let loginItem: LoginItem
@@ -17,40 +19,21 @@ struct DropdownView: View {
             ForEach(store.limits, id: \.label) { limit in
                 LimitRow(limit: limit, stale: store.error != nil)
             }
-            Divider()
-            HStack {
-                TimelineView(.everyMinute) { context in
-                    Text(footerText(now: context.date))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if store.isRefreshing {
-                    ProgressView().controlSize(.small)
-                } else {
-                    Button {
-                        Task { await store.refresh() }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Refresh now")
-                }
+            TimelineView(.everyMinute) { context in
+                Text(footerText(now: context.date))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            Toggle("Open at login", isOn: Binding(
-                get: { loginItem.isEnabled },
-                set: { loginItem.setEnabled($0) }))
-                .toggleStyle(.checkbox)
             if let problem = loginItem.problem {
                 Text(problem)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Button("Quit") { NSApp.terminate(nil) }
-                .buttonStyle(.borderless)
         }
-        .padding(14)
-        .frame(width: 280)
+        // Leading inset lines the text up with the menu item titles underneath.
+        .padding(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 14))
+        .frame(width: 250, alignment: .leading)
+        .background(Color.clear)
     }
 
     private func footerText(now: Date) -> String {
@@ -83,7 +66,7 @@ private struct LimitRow: View {
 }
 
 /// Drawn with shapes rather than `ProgressView`/`NSProgressIndicator`, which loses its tint colour
-/// while the popover's window isn't key (e.g. for the entire open animation).
+/// while the menu's window isn't key (which it never is).
 private struct UsageBar: View {
     let percent: Double
     let color: Color

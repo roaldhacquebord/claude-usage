@@ -51,7 +51,7 @@ Swift package, SwiftUI + AppKit, macOS 14+, Swift tools 6.0 with strict concurre
 No third-party dependencies.
 
 ```
-timer / popover opened / wake from sleep
+timer / menu opened / wake from sleep
         │
         ▼
 UsageStore ──► UsageFetcher ──► `claude -p /usage` ──► result text
@@ -59,7 +59,7 @@ UsageStore ──► UsageFetcher ──► `claude -p /usage` ──► result 
         └────────────── [Limit] ◄──── UsageParser ◄───────┘
         │
         ▼
-MenuBarLabel ──► NSStatusItem "42% · 62% · 93%"      DropdownView (in NSPopover)
+MenuBarLabel ──► NSStatusItem "42% · 62% · 93%"      DropdownView (in NSMenu item)
 ```
 
 ### UsageCore (library target, no UI code)
@@ -103,7 +103,7 @@ MenuBarLabel ──► NSStatusItem "42% · 62% · 93%"      DropdownView (in NS
   `lastSuccess` and clears `error`. A parse result of zero limits becomes
   `.unparseable(sample: first few lines)`. On failure it sets `error` and **keeps** the previous
   `limits`.
-- Triggers: a 5-minute repeating timer, the popover opening, and `NSWorkspace.didWakeNotification`
+- Triggers: a 5-minute repeating timer, the menu opening, and `NSWorkspace.didWakeNotification`
   (the last two are wired up by the app target).
 - The fetch function is injected so the store can be tested without processes.
 
@@ -122,7 +122,11 @@ without AppKit.
   with ` · `. Font: monospaced-digit system font so the width doesn't jitter. Colours: default menu
   bar text colour (`normal`), `systemOrange` (`warning`), `systemRed` (`critical`), secondary label
   colour (`stale`). `MenuBarExtra` is not used because it renders its label in a single colour.
-- Clicking opens a transient `NSPopover` hosting `DropdownView` (SwiftUI) and triggers a refresh.
+- Clicking opens an `NSMenu` set as the status item's `menu`, and triggers a refresh from
+  `menuWillOpen`. `DropdownView` (SwiftUI) is hosted in a custom-view menu item so the dropdown gets
+  the system's menu material, corner radius and highlight rather than a popover's panel look; the
+  interactive controls are real `NSMenuItem`s underneath it. `menu.autoenablesItems` is off, since
+  there is no responder chain to validate against.
 - `LSUIElement = true` in Info.plist: no Dock icon, no main window.
 
 **`DropdownView`**
@@ -140,20 +144,27 @@ without AppKit.
 │ Current week (Fable)             93% │
 │ ██████████████████░░   (orange)      │
 │ resets Sep 13 at 9pm                 │
+│ Updated 2 min ago                    │
 │──────────────────────────────────────│
-│ Updated 2 min ago               ↻    │
-│ ☑ Open at login                      │
-│ Quit                                 │
+│ Refresh Now                          │
+│ Open at Login                     ✓  │
+│──────────────────────────────────────│
+│ Quit                            ⌘Q   │
 └──────────────────────────────────────┘
 ```
+
+The boxed area above the first separator is the custom-view item; everything below it is an ordinary
+menu item. The hosting view uses `sizingOptions = [.intrinsicContentSize]` and is re-fitted on every
+`menuWillOpen`, so the panel grows when limits replace the "Loading usage…" placeholder.
 
 - One row per limit, in parser order; bar colour follows the same levels as the menu bar.
 - Label and reset text are shown exactly as parsed (no conversion to countdowns).
 - When `error` is set, an error line is shown above the bars (see Error handling) and the footer
   reads "Last updated <relative time>".
-- The ↻ button calls `refresh()` and shows a spinner while `isRefreshing`.
+- "Refresh Now" calls `refresh()`, and reads "Refreshing…" while `isRefreshing`.
 
-**Open at login** — toggle backed by `SMAppService.mainApp`, on by default at first launch.
+**Open at Login** — a checkmarked menu item backed by `SMAppService.mainApp`, on by default at
+first launch.
 `SMAppService` accepts the ad-hoc-signed app: registering and unregistering were both confirmed
 against System Settings and `sfltool dumpbtm`, so no LaunchAgent fallback is used.
 
