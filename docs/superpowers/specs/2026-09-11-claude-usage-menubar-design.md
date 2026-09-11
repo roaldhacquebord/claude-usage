@@ -81,10 +81,11 @@ MenuBarLabel ──► NSStatusItem "42% · 62% · 93%"      DropdownView (in NS
 **`UsageFetcher`** — runs the command and returns the `result` text or a typed error.
 
 - Executable URL, arguments and timeout are injectable (tests use fake scripts and a 1 s timeout).
-- Locating `claude` (GUI apps don't inherit the shell `PATH`): run `/bin/zsh -lc 'command -v claude'`
-  once (10 s timeout), falling back to `~/.local/bin/claude`, `/opt/homebrew/bin/claude`,
-  `/usr/local/bin/claude`. Resolve again on the next refresh if not found. On this machine it
-  resolves to `~/.local/bin/claude`, a symlink that survives Claude Code updates.
+- Locating `claude` (GUI apps don't inherit the shell `PATH`): on every refresh, run
+  `/bin/zsh -lc 'command -v claude'` (10 s timeout, last output line wins), falling back to
+  `~/.local/bin/claude`, `/opt/homebrew/bin/claude`, `/usr/local/bin/claude`. One login shell per
+  5 minutes is cheap, and it picks up a moved or reinstalled `claude` without caching logic. On this
+  machine it resolves to `~/.local/bin/claude`, a symlink that survives Claude Code updates.
 - Working directory: a neutral folder (the app's temporary directory), so no project's `.claude/`
   settings, hooks or `.mcp.json` are picked up.
 - The environment is inherited, with the directory containing `claude` prepended to `PATH`.
