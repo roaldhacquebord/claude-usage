@@ -4,6 +4,7 @@ import UsageCore
 
 struct DropdownView: View {
     let store: UsageStore
+    let loginItem: LoginItem
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -35,6 +36,15 @@ struct DropdownView: View {
                     .buttonStyle(.borderless)
                     .help("Refresh now")
                 }
+            }
+            Toggle("Open at login", isOn: Binding(
+                get: { loginItem.isEnabled },
+                set: { loginItem.setEnabled($0) }))
+                .toggleStyle(.checkbox)
+            if let problem = loginItem.problem {
+                Text(problem)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Button("Quit") { NSApp.terminate(nil) }
                 .buttonStyle(.borderless)

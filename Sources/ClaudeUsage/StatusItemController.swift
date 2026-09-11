@@ -11,12 +11,12 @@ final class StatusItemController: NSObject {
     private let statusItem: NSStatusItem
     private let popover = NSPopover()
 
-    init(store: UsageStore) {
+    init(store: UsageStore, loginItem: LoginItem) {
         self.store = store
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
 
-        let hosting = NSHostingController(rootView: DropdownView(store: store))
+        let hosting = NSHostingController(rootView: DropdownView(store: store, loginItem: loginItem))
         hosting.sizingOptions = .preferredContentSize
         popover.contentViewController = hosting
         popover.behavior = .transient
