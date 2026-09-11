@@ -30,9 +30,8 @@ final class StatusItemController: NSObject {
         if popover.isShown {
             popover.performClose(sender)
         } else {
-            // Activate the app before showing the popover to prevent progress bars from redrawing mid-animation.
-            NSApp.activate()
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
+            NSApp.activate()
             Task { await store.refresh() }
         }
     }
