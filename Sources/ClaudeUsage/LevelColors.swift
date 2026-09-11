@@ -13,7 +13,9 @@ extension Level {
     }
 
     /// Progress bars use the accent colour when normal; the menu bar uses the plain text colour.
+    /// Both are resolved via `NSColor` deliberately: they must not depend on the popover's window
+    /// being key, unlike SwiftUI's `.accentColor`/`.tint`.
     var barColor: Color {
-        self == .normal ? .accentColor : Color(nsColor: nsColor)
+        self == .normal ? Color(nsColor: .controlAccentColor) : Color(nsColor: nsColor)
     }
 }

@@ -73,14 +73,34 @@ private struct LimitRow: View {
                 Spacer()
                 Text(MenuBarLabel.percentText(limit.percent)).monospacedDigit()
             }
-            ProgressView(value: min(max(limit.percent, 0), 100), total: 100)
-                .progressViewStyle(.linear)
-                .tint(level.barColor)
+            UsageBar(percent: limit.percent, color: level.barColor)
             Text(limit.resetText)
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .foregroundStyle(stale ? .secondary : .primary)
+    }
+}
+
+/// Drawn with shapes rather than `ProgressView`/`NSProgressIndicator`, which loses its tint colour
+/// while the popover's window isn't key (e.g. for the entire open animation).
+private struct UsageBar: View {
+    let percent: Double
+    let color: Color
+
+    private var fraction: Double {
+        min(max(percent, 0), 100) / 100
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(.quaternary)
+                Capsule().fill(color)
+                    .frame(width: geometry.size.width * fraction)
+            }
+        }
+        .frame(height: 6)
     }
 }
 
