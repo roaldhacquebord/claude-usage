@@ -24,6 +24,9 @@ if [[ "${1:-}" == "install" ]]; then
         pgrep -x ClaudeUsage >/dev/null || break
         sleep 0.1
     done
+    if pgrep -x ClaudeUsage >/dev/null; then
+        echo "Warning: old instance still running; install may fail" >&2
+    fi
     rm -rf "/Applications/Claude Usage.app"
     cp -R "$APP" /Applications/
     open "/Applications/Claude Usage.app"

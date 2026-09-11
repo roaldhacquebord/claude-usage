@@ -153,10 +153,9 @@ without AppKit.
   reads "Last updated <relative time>".
 - The ↻ button calls `refresh()` and shows a spinner while `isRefreshing`.
 
-**Open at login** — toggle backed by `SMAppService.mainApp`, on by default at first launch. It is
-unverified whether `SMAppService` accepts an ad-hoc-signed app; if it doesn't, fall back to writing
-a LaunchAgent plist to `~/Library/LaunchAgents/local.roald.ClaudeUsage.plist`. Decided during
-implementation.
+**Open at login** — toggle backed by `SMAppService.mainApp`, on by default at first launch.
+`SMAppService` accepts the ad-hoc-signed app: registering and unregistering were both confirmed
+against System Settings and `sfltool dumpbtm`, so no LaunchAgent fallback is used.
 
 ## Error handling
 

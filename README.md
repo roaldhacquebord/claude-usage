@@ -5,6 +5,9 @@ week, and per-model week) as `42% · 62% · 93%`. It gets the numbers by running
 `claude -p "/usage"`, so it needs no API token.
 
 Requirements: macOS 14+, Xcode (only its toolchain is used), and Claude Code installed and logged in.
+`claude` needs to be findable either via the login shell's PATH (`zsh -lc`, i.e. `.zshenv`,
+`.zprofile` or `.zlogin` — note `.zshrc` is not sourced) or in `~/.local/bin`, `/opt/homebrew/bin`
+or `/usr/local/bin`. The app enables "Open at login" automatically on first launch.
 
 ```bash
 ./build.sh install   # build, copy to /Applications, launch
