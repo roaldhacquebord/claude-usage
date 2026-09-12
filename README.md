@@ -17,3 +17,5 @@ CLAUDE_USAGE_E2E=1 ./test.sh --filter realClaudeEndToEnd   # check against the r
 ```
 
 Design: `docs/superpowers/specs/2026-09-11-claude-usage-menubar-design.md`
+
+License: [MIT](LICENSE)

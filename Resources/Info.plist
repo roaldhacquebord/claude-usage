@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>local.roald.ClaudeUsage</string>
+    <string>dev.roald.ClaudeUsage</string>
     <key>CFBundleName</key>
     <string>Claude Usage</string>
     <key>CFBundleDisplayName</key>

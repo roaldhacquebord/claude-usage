@@ -7,7 +7,7 @@ Status: approved in brainstorming, pending spec review
 
 A macOS menu bar app that shows my Claude subscription usage limits at a glance:
 `42% · 62% · 93%` (current session, current week all models, current week Fable),
-with a dropdown for details. Personal use only; not distributed.
+with a dropdown for details.
 
 ## Data source
 
@@ -192,7 +192,7 @@ Package.swift
 Sources/UsageCore/        Limit, UsageParser, UsageFetcher, UsageStore, MenuBarLabel
 Sources/ClaudeUsage/      app entry, status item, DropdownView, login item
 Tests/UsageCoreTests/     Swift Testing tests
-Resources/Info.plist      bundle id local.roald.ClaudeUsage, LSUIElement
+Resources/Info.plist      bundle id dev.roald.ClaudeUsage, LSUIElement
 build.sh                  release build → build/Claude Usage.app (ad-hoc signed); `install` → /Applications + relaunch
 test.sh                   swift test with Xcode's toolchain
 ```
