@@ -4,6 +4,8 @@ A macOS menu bar app that shows your Claude subscription usage limits (current s
 week, and per-model week) as `42% · 62% · 93%`. It gets the numbers by running Claude Code's own
 `claude -p "/usage"`, so it needs no API token.
 
+![Claude Usage in the menu bar, with its dropdown open](claude-usage-screenshot.png)
+
 Requirements: macOS 14+, Xcode (only its toolchain is used), and Claude Code installed and logged in.
 `claude` needs to be findable either via the login shell's PATH (`zsh -lc`, i.e. `.zshenv`,
 `.zprofile` or `.zlogin` — note `.zshrc` is not sourced) or in `~/.local/bin`, `/opt/homebrew/bin`
