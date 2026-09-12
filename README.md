@@ -1,7 +1,7 @@
 # Claude Usage
 
 A macOS menu bar app that shows your Claude subscription usage limits (current session, current
-week, and per-model week) as `42% · 62% · 93%`. It gets the numbers by running Claude Code's own
+week, and per-model week) as `6% · 73% · 98%`. It gets the numbers by running Claude Code's own
 `claude -p "/usage"`, so it needs no API token.
 
 ![Claude Usage in the menu bar, with its dropdown open](claude-usage-screenshot.png)
