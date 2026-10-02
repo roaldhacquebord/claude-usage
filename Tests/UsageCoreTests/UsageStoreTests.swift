@@ -61,6 +61,16 @@ actor ScriptedFetch {
         #expect(store.lastSuccess == nil)
     }
 
+    @Test func reportWithoutLimitsIsUnavailableNotUnparseable() async {
+        let store = makeStore(ScriptedFetch([.success(Fixtures.usageOutput), .success(Fixtures.usageOutputWithoutLimits)]))
+        await store.refresh()
+        let firstSuccess = store.lastSuccess
+        await store.refresh()
+        #expect(store.limits.count == 3)
+        #expect(store.error == .limitsUnavailable)
+        #expect(store.lastSuccess == firstSuccess)
+    }
+
     @Test func concurrentRefreshFetchesOnce() async {
         let fetch = ScriptedFetch([.success(Fixtures.usageOutput)], delay: .milliseconds(100))
         let store = makeStore(fetch)

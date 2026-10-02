@@ -23,4 +23,10 @@ import Testing
         #expect(error.message == "Couldn't read usage; the /usage format may have changed")
         #expect(error.detail == "Something else")
     }
+
+    @Test func limitsUnavailableSaysItWillRetry() {
+        let error = UsageError.limitsUnavailable
+        #expect(error.message == "Claude Code didn't return your limits; will retry")
+        #expect(error.detail == nil)
+    }
 }

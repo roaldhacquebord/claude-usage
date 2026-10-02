@@ -8,6 +8,9 @@ public enum UsageError: Error, Equatable, Sendable {
     case unreadableOutput(sample: String)
     /// The command succeeded but no usage lines were recognised. Set only by `UsageStore`.
     case unparseable(sample: String)
+    /// Claude Code answered `/usage` but left out the limit lines, which it does when it can't
+    /// get them from the server. Usually temporary. Set only by `UsageStore`.
+    case limitsUnavailable
 
     public var message: String {
         switch self {
@@ -16,6 +19,7 @@ public enum UsageError: Error, Equatable, Sendable {
         case .timedOut: "Claude Code didn't respond"
         case .unreadableOutput: "Couldn't read Claude Code's output"
         case .unparseable: "Couldn't read usage; the /usage format may have changed"
+        case .limitsUnavailable: "Claude Code didn't return your limits; will retry"
         }
     }
 
@@ -23,7 +27,7 @@ public enum UsageError: Error, Equatable, Sendable {
         switch self {
         case .notFound(let searched): "Looked in: " + searched.joined(separator: ", ")
         case .unreadableOutput(let sample), .unparseable(let sample): sample
-        case .claudeError, .timedOut: nil
+        case .claudeError, .timedOut, .limitsUnavailable: nil
         }
     }
 

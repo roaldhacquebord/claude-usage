@@ -31,6 +31,18 @@ import Testing
         #expect(UsageParser.parse(text).isEmpty)
     }
 
+    @Test func outputWithoutLimitLinesYieldsNoLimits() {
+        #expect(UsageParser.parse(Fixtures.usageOutputWithoutLimits).isEmpty)
+    }
+
+    @Test func recognisesUsageReportHeader() {
+        #expect(UsageParser.isUsageReport(Fixtures.usageOutput))
+        #expect(UsageParser.isUsageReport(Fixtures.usageOutputWithoutLimits))
+        #expect(UsageParser.isUsageReport(
+            "You are currently using your overages to power your Claude Code usage. We will automatically switch you back"))
+        #expect(!UsageParser.isUsageReport("Session usage: 42% (resets Sep 12)"))
+    }
+
     @Test func decimalPercentage() {
         let limits = UsageParser.parse("Current session: 42.5% used · resets Sep 12 at 12am")
         #expect(limits.map(\.percent) == [42.5])

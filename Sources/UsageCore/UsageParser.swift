@@ -8,6 +8,13 @@ public enum UsageParser {
         text.split(whereSeparator: \.isNewline).compactMap { parseLine(String($0)) }
     }
 
+    /// Whether `text` is Claude Code's `/usage` report at all, judged by its opening line
+    /// (`You are currently using your subscription to power your Claude Code usage`, or the
+    /// overages variant). It is printed even when the limit lines are missing.
+    public static func isUsageReport(_ text: String) -> Bool {
+        text.contains("to power your Claude Code usage")
+    }
+
     static func parseLine(_ line: String) -> Limit? {
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         guard

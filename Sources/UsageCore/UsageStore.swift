@@ -27,7 +27,8 @@ public final class UsageStore {
         case .success(let text):
             let parsed = UsageParser.parse(text)
             if parsed.isEmpty {
-                error = .unparseable(sample: UsageError.sample(of: text))
+                error = UsageParser.isUsageReport(text)
+                    ? .limitsUnavailable : .unparseable(sample: UsageError.sample(of: text))
             } else {
                 limits = parsed
                 lastSuccess = Date()
