@@ -18,6 +18,11 @@ or `/usr/local/bin`. The app enables "Open at login" automatically on first laun
 CLAUDE_USAGE_E2E=1 ./test.sh --filter realClaudeEndToEnd   # check against the real claude
 ```
 
+If the menu keeps saying "Claude Code didn't return your limits", check whether
+`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` is set, in your environment or in the `env` block of
+`~/.claude/settings.json`. It makes `/usage` skip fetching your limits. If you only set it to opt out
+of telemetry, `DISABLE_TELEMETRY=1` does that without breaking this app.
+
 Design: `docs/superpowers/specs/2026-09-11-claude-usage-menubar-design.md`
 
 License: [MIT](LICENSE)
