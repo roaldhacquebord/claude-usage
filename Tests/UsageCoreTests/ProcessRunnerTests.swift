@@ -20,4 +20,23 @@ import Testing
         }
         #expect(elapsed < 5, "took \(elapsed)s — pipe read likely blocked on the lingering background child")
     }
+
+    @Test func killsProcessThatIgnoresTerminate() throws {
+        let pidFile = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let script = try makeScript("trap '' TERM\necho $$ > '\(pidFile.path)'\nexec sleep 30")
+
+        guard case .failure(.timedOut) = ProcessRunner.run(script, arguments: [], timeout: 0.5) else {
+            Issue.record("expected .failure(.timedOut)")
+            return
+        }
+
+        let pid = try #require(Int32(String(contentsOf: pidFile, encoding: .utf8)
+            .trimmingCharacters(in: .whitespacesAndNewlines)))
+        // Foundation reaps the killed process asynchronously, so give it a moment to disappear.
+        let deadline = Date().addingTimeInterval(2)
+        while kill(pid, 0) == 0 && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        #expect(kill(pid, 0) == -1, "process \(pid) survived the SIGKILL escalation")
+    }
 }

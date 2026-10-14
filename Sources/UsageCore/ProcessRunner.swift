@@ -57,11 +57,11 @@ enum ProcessRunner {
 
         guard exited.wait(timeout: .now() + timeout) == .success else {
             process.terminate()
-            if process.isRunning {
-                Thread.sleep(forTimeInterval: killGracePeriod)
-                if process.isRunning {
-                    kill(process.processIdentifier, SIGKILL)
-                }
+            // Wait on the termination handler rather than sleeping and checking `isRunning`: once
+            // the process has been reaped its PID can be reused, so SIGKILL goes out only while
+            // the handler hasn't fired yet. That narrows the race but can't fully close it.
+            if exited.wait(timeout: .now() + killGracePeriod) == .timedOut {
+                kill(process.processIdentifier, SIGKILL)
             }
             return .failure(.timedOut)
         }
