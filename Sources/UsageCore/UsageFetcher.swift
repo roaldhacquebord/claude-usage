@@ -2,14 +2,19 @@ import Foundation
 
 /// Runs `claude -p /usage` and returns the text Claude Code printed.
 public struct UsageFetcher: Sendable {
-    public static let defaultArguments = ["-p", "/usage", "--no-session-persistence", "--output-format", "json"]
+    /// `--safe-mode` keeps hooks, plugins, MCP servers, CLAUDE.md and custom commands from loading,
+    /// so polling doesn't run them every few minutes; login and `/usage` work as normal.
+    public static let defaultArguments = [
+        "-p", "/usage", "--no-session-persistence", "--safe-mode", "--output-format", "json",
+    ]
 
     private let locate: @Sendable () -> Result<URL, UsageError>
     private let arguments: [String]
     private let timeout: TimeInterval
     private let workingDirectory: URL
 
-    /// `workingDirectory` defaults to a neutral folder so no project's `.claude/` settings or hooks apply.
+    /// `workingDirectory` defaults to a folder outside any project. That alone doesn't stop a
+    /// `.claude/` folder there from loading; `--safe-mode` in `defaultArguments` does.
     public init(
         locate: @escaping @Sendable () -> Result<URL, UsageError> = ClaudeLocator.locate,
         arguments: [String] = UsageFetcher.defaultArguments,

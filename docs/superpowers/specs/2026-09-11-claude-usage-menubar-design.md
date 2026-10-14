@@ -14,7 +14,7 @@ with a dropdown for details.
 The app runs Claude Code's own `/usage` command in print mode:
 
 ```
-claude -p "/usage" --no-session-persistence --output-format json
+claude -p "/usage" --no-session-persistence --safe-mode --output-format json
 ```
 
 Why this and not an API:
@@ -41,6 +41,11 @@ What's contributing to your limits usage?
 
 `--no-session-persistence` is mandatory; without it every poll leaves a transcript in
 `~/.claude/projects` that shows up in `claude --resume`.
+
+`--safe-mode` (added 2026-10-14) stops hooks, plugins, MCP servers, CLAUDE.md and custom commands
+from loading. Without it, every poll runs the user's hooks, and print mode also runs the hooks in
+any `.claude/settings.json` in the working directory without a trust prompt (verified with a
+`SessionStart` hook in the temp folder). `--bare` is not an option: it never reads the OAuth login.
 
 Known risk: the text is meant for humans and may change between Claude Code versions. The app must
 fail visibly (see Error handling) rather than show wrong numbers.

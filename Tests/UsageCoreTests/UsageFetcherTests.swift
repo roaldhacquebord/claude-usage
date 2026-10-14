@@ -15,7 +15,7 @@ import Testing
     @Test func passesUsageArguments() async throws {
         let script = try makeScript(#"printf '{"is_error":false,"result":"%s"}' "$*""#)
         #expect(await fetcher(script).fetch()
-            == .success("-p /usage --no-session-persistence --output-format json"))
+            == .success("-p /usage --no-session-persistence --safe-mode --output-format json"))
     }
 
     @Test func runsInWorkingDirectoryWithClaudeFirstOnPath() async throws {
