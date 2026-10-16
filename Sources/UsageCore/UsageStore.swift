@@ -50,14 +50,25 @@ public final class UsageStore {
         await refresh()
     }
 
-    /// Refreshes now and then every `interval`, until `stopAutoRefresh()`.
-    public func startAutoRefresh(interval: Duration = .seconds(300)) {
+    /// Refreshes now and then every `interval`, until `stopAutoRefresh()`. After a failure it
+    /// retries sooner, starting at `firstRetry` and doubling up to `interval`, since failures are
+    /// often brief, such as the network not being back yet right after waking.
+    public func startAutoRefresh(interval: Duration = .seconds(300), firstRetry: Duration = .seconds(30)) {
         autoRefreshTask?.cancel()
         autoRefreshTask = Task {
+            var retry = firstRetry
             while !Task.isCancelled {
                 await refresh()
+                let delay: Duration
+                if error == nil {
+                    delay = interval
+                    retry = firstRetry
+                } else {
+                    delay = min(retry, interval)
+                    retry *= 2
+                }
                 // The slack lets macOS coalesce this wake-up with other timers.
-                try? await Task.sleep(for: interval, tolerance: interval / 10)
+                try? await Task.sleep(for: delay, tolerance: delay / 10)
             }
         }
     }

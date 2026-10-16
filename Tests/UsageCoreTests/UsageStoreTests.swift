@@ -106,4 +106,22 @@ actor ScriptedFetch {
         store.stopAutoRefresh()
         #expect(await fetch.calls >= 2)
     }
+
+    @Test func autoRefreshRetriesFailureSooner() async throws {
+        let fetch = ScriptedFetch([.failure(.timedOut)])
+        let store = makeStore(fetch)
+        store.startAutoRefresh(interval: .seconds(60), firstRetry: .milliseconds(50))
+        try await Task.sleep(for: .milliseconds(300))
+        store.stopAutoRefresh()
+        #expect(await fetch.calls >= 2)
+    }
+
+    @Test func autoRefreshWaitsFullIntervalAfterSuccess() async throws {
+        let fetch = ScriptedFetch([.success(Fixtures.usageOutput)])
+        let store = makeStore(fetch)
+        store.startAutoRefresh(interval: .seconds(60), firstRetry: .milliseconds(50))
+        try await Task.sleep(for: .milliseconds(300))
+        store.stopAutoRefresh()
+        #expect(await fetch.calls == 1)
+    }
 }
