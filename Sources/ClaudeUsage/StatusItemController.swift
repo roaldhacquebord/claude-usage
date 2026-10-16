@@ -106,6 +106,6 @@ final class StatusItemController: NSObject {
 extension StatusItemController: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         syncMenuItems()
-        Task { await store.refresh() }
+        Task { await store.refreshIfStale() }
     }
 }

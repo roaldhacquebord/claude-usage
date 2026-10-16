@@ -80,6 +80,24 @@ actor ScriptedFetch {
         #expect(await fetch.calls == 1)
     }
 
+    @Test func refreshIfStaleSkipsRecentAttempt() async {
+        let fetch = ScriptedFetch([.success(Fixtures.usageOutput)])
+        let store = makeStore(fetch)
+        await store.refreshIfStale(maxAge: .seconds(60))
+        await store.refreshIfStale(maxAge: .seconds(60))
+        #expect(await fetch.calls == 1)
+        await store.refreshIfStale(maxAge: .zero)
+        #expect(await fetch.calls == 2)
+    }
+
+    @Test func refreshIfStaleCountsFailedAttempts() async {
+        let fetch = ScriptedFetch([.failure(.timedOut)])
+        let store = makeStore(fetch)
+        await store.refresh()
+        await store.refreshIfStale(maxAge: .seconds(60))
+        #expect(await fetch.calls == 1)
+    }
+
     @Test func autoRefreshRepeats() async throws {
         let fetch = ScriptedFetch([.success(Fixtures.usageOutput)])
         let store = makeStore(fetch)
