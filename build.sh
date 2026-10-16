@@ -14,7 +14,9 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/ClaudeUsage"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
-codesign --force --sign - "$APP"
+# Hardened runtime: among other things, the app ignores DYLD_* variables, so nothing can be
+# injected into it through the environment.
+codesign --force --options runtime --sign - "$APP"
 echo "Built $APP"
 
 if [[ "${1:-}" == "install" ]]; then
