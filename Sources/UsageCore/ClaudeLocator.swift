@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Finds the `claude` executable. Apps started from Finder don't get the shell's PATH,
 /// so ask the login shell first, then try the usual install locations.
@@ -32,5 +33,26 @@ public enum ClaudeLocator {
             .split(whereSeparator: \.isNewline)
             .last
             .map { $0.trimmingCharacters(in: .whitespaces) }
+    }
+}
+
+/// Remembers where `claude` was found, so polling doesn't start a login shell every time. Looks
+/// again once that path stops being executable, e.g. after an uninstall. Failures aren't
+/// remembered, so installing `claude` later is picked up on the next poll.
+public final class CachingClaudeLocator: Sendable {
+    private let lookUp: @Sendable () -> Result<URL, UsageError>
+    private let cached = OSAllocatedUnfairLock<URL?>(initialState: nil)
+
+    public init(lookUp: @escaping @Sendable () -> Result<URL, UsageError> = ClaudeLocator.locate) {
+        self.lookUp = lookUp
+    }
+
+    public func locate() -> Result<URL, UsageError> {
+        if let url = cached.withLock({ $0 }), FileManager.default.isExecutableFile(atPath: url.path) {
+            return .success(url)
+        }
+        let result = lookUp()
+        cached.withLock { $0 = try? result.get() }
+        return result
     }
 }

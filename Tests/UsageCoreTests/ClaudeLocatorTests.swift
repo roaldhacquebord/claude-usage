@@ -1,4 +1,5 @@
 import Foundation
+import os
 import Testing
 @testable import UsageCore
 
@@ -28,5 +29,41 @@ import Testing
     @Test func loginShellLookupFailureReturnsNil() throws {
         let shell = try makeScript("exit 1", name: "zsh")
         #expect(ClaudeLocator.lookUpViaLoginShell(shell: shell) == nil)
+    }
+
+    @Test func cacheReusesPathWhileExecutable() throws {
+        let script = try makeScript("exit 0")
+        let lookUps = OSAllocatedUnfairLock(initialState: 0)
+        let locator = CachingClaudeLocator(lookUp: {
+            lookUps.withLock { $0 += 1 }
+            return .success(script)
+        })
+        #expect(locator.locate() == .success(script))
+        #expect(locator.locate() == .success(script))
+        #expect(lookUps.withLock { $0 } == 1)
+    }
+
+    @Test func cacheLooksAgainOncePathIsGone() throws {
+        let script = try makeScript("exit 0")
+        let lookUps = OSAllocatedUnfairLock(initialState: 0)
+        let locator = CachingClaudeLocator(lookUp: {
+            lookUps.withLock { $0 += 1 }
+            return .success(script)
+        })
+        _ = locator.locate()
+        try FileManager.default.removeItem(at: script)
+        _ = locator.locate()
+        #expect(lookUps.withLock { $0 } == 2)
+    }
+
+    @Test func cacheDoesNotRememberFailures() {
+        let lookUps = OSAllocatedUnfairLock(initialState: 0)
+        let locator = CachingClaudeLocator(lookUp: {
+            lookUps.withLock { $0 += 1 }
+            return .failure(.notFound(searched: []))
+        })
+        _ = locator.locate()
+        _ = locator.locate()
+        #expect(lookUps.withLock { $0 } == 2)
     }
 }

@@ -9,7 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var loginItem: LoginItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        let store = UsageStore(fetch: { await UsageFetcher().fetch() })
+        let fetcher = UsageFetcher(locate: CachingClaudeLocator().locate)
+        let store = UsageStore(fetch: { await fetcher.fetch() })
         self.store = store
         let loginItem = LoginItem()
         self.loginItem = loginItem
