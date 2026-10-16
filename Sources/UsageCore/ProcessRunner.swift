@@ -25,7 +25,8 @@ enum ProcessRunner {
     /// a bounded wait — so neither a large amount of output nor a process that leaves a
     /// background child holding a pipe's write end open (as `claude`, a Node process, could) can
     /// wedge this call: draining no longer waits for every holder of a pipe's write end to close
-    /// it, only for the direct child to exit plus a short bounded join.
+    /// it, only for the direct child to exit plus a short bounded join. Joining also stops the
+    /// reads and closes the pipes, so nothing keeps reading on behalf of a lingering child.
     static func run(
         _ executable: URL,
         arguments: [String],
@@ -63,6 +64,8 @@ enum ProcessRunner {
             if exited.wait(timeout: .now() + killGracePeriod) == .timedOut {
                 kill(process.processIdentifier, SIGKILL)
             }
+            _ = stdoutReader.join(deadline: .now())
+            _ = stderrReader.join(deadline: .now())
             return .failure(.timedOut)
         }
 
@@ -83,23 +86,28 @@ enum ProcessRunner {
 private final class PipeReader: Sendable {
     private let storage = OSAllocatedUnfairLock(initialState: Data())
     private let done = DispatchSemaphore(value: 0)
+    private let channel: DispatchIO
 
     init(draining handle: FileHandle) {
-        DispatchQueue.global(qos: .utility).async { [storage, done] in
-            // Read incrementally rather than with readDataToEndOfFile(), which would block until
-            // every holder of the write end (including a lingering background child) closes it;
-            // this way whatever has already arrived is visible to `join` even if it never does.
-            while true {
-                let chunk = handle.availableData
-                if chunk.isEmpty { break }
-                storage.withLock { $0.append(chunk) }
-            }
-            done.signal()
+        // A dispatch channel rather than a loop over availableData, which would block a thread in
+        // read() for as long as any holder of the write end (including a lingering background
+        // child) keeps it open. The channel can be stopped instead, and closes the handle itself
+        // once stopped: waiting for the Pipe to be deallocated would leave it open for an
+        // unpredictable while, so a lingering child could keep writing into it.
+        channel = DispatchIO(
+            type: .stream, fileDescriptor: handle.fileDescriptor, queue: .global(qos: .utility),
+            cleanupHandler: { _ in try? handle.close() })
+        channel.setLimit(lowWater: 1)
+        channel.read(offset: 0, length: Int.max, queue: .global(qos: .utility)) { [storage, done] isDone, chunk, _ in
+            if let chunk, !chunk.isEmpty { storage.withLock { $0.append(contentsOf: chunk) } }
+            if isDone { done.signal() }
         }
     }
 
+    /// Waits until EOF or `deadline`, then stops reading and closes the pipe.
     func join(deadline: DispatchTime) -> Data {
         _ = done.wait(timeout: deadline)
+        channel.close(flags: .stop)
         return storage.withLock { $0 }
     }
 }

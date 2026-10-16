@@ -21,6 +21,18 @@ import Testing
         #expect(elapsed < 5, "took \(elapsed)s — pipe read likely blocked on the lingering background child")
     }
 
+    /// Having given up on a pipe, the runner must close it rather than leave a thread blocked reading
+    /// it for as long as the lingering child lives. A write after that then hits a broken pipe.
+    @Test func closesPipeAfterGivingUpOnLingeringChild() throws {
+        let marker = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let script = try makeScript("(sleep 3; echo late && touch '\(marker.path)') &\nexit 0")
+
+        _ = ProcessRunner.run(script, arguments: [], timeout: 5)
+        // run() gives up on the pipes about 2s in; the child writes at 3s.
+        Thread.sleep(forTimeInterval: 2)
+        #expect(!FileManager.default.fileExists(atPath: marker.path), "the pipe was still being read")
+    }
+
     @Test func killsProcessThatIgnoresTerminate() throws {
         let pidFile = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let script = try makeScript("trap '' TERM\necho $$ > '\(pidFile.path)'\nexec sleep 30")
