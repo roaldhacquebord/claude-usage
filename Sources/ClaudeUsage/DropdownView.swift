@@ -92,8 +92,10 @@ private struct ErrorBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            // A Claude error message can be all of claude's stderr, e.g. a stack trace.
             Label(error.message, systemImage: "exclamationmark.triangle.fill")
                 .font(.callout.weight(.medium))
+                .lineLimit(4)
                 .foregroundStyle(.orange)
             if let detail = error.detail {
                 Text(detail)
